@@ -1,6 +1,6 @@
 # Connections LLM Benchmark
 
-A few months ago I've become addicted to Connections, the NYT game where you have to group 16 words into 4 groups based on often puzzling connections. Quite a few times I became frustrated trying to solve a puzzle and thought I'd try Gemini or ChatGPT to help me. That's when I've noticed that LLMs seem to generally be completely useless at this task. The natural conclusion was that this would be a wonderful ad-hoc benchmark for LLMs, especially the new ones that feign "reasoning".
+A few months ago I've ~~become addicted to~~ started playing [Connections](https://www.nytimes.com/games/connections), the NYT game where you have to group 16 words into 4 groups based on often puzzling connections. Quite a few times I became frustrated trying to solve a puzzle and thought I'd try Gemini or ChatGPT to help me. That's when I've noticed that LLMs seem to generally be completely useless at this task. The natural conclusion was that this would be a wonderful ad-hoc benchmark for LLMs, especially the new ones that feign "reasoning".
 
 As of today, 12th of March 2025, I've run a test with the past 10 days worth of puzzles. The supporting files and results can be found in this repo.
 
