@@ -3,86 +3,64 @@ import os
 import matplotlib.pyplot as plt
 
 
-def parse_connections_output(output_string):
-    """Parses the comma-separated output from the LLM."""
-    parts = output_string.split(",")
-    if len(parts) != 16:
-        return None
-    categories = []
-    for i in range(4):
-        category_words = sorted(
-            [word.lower().strip() for word in parts[i * 4 : i * 4 + 4]]
-        )
-        categories.append(category_words)
-    return categories
-
-
-def compare_categories(llm_categories, correct_categories):
-    """Compares LLM's categories to the correct categories, ignoring order."""
-    if llm_categories is None:
-        return False
-    correct = True
-    for correct_words in correct_categories:
-        found = False
-        for llm_words in llm_categories:
-            if sorted(llm_words) == sorted(correct_words):
-                found = True
-                break
-        if not found:
-            correct = False
-            break
-    return correct
-
-
-def analyze_results(model_files, correct_results_file):
-    """Analyzes the results from the CSV files."""
-    results = {}
-    with open(correct_results_file, "r") as f:
+def parse_csv(file_name):
+    with open(file_name, "r") as f:
         reader = csv.reader(f)
-        correct_data = list(reader)
+        csv_data = list(reader)
 
-    for model_file in model_files:
-        model_name = os.path.splitext(os.path.basename(model_file))[0]
-        results[model_name] = {"correct": 0, "total": 0}
+    res = list()
+    for row in csv_data:
+        if len(row) != 16:
+            raise ValueError(f"Row {row} has {len(row)} columns, expected 16")
+        line = list()
+        for i in range(4):
+            line.append(
+                tuple(sorted(word.lower().strip() for word in row[i * 4 : i * 4 + 4]))
+            )
+        res.append(line)
 
-        with open(model_file, "r") as f:
-            reader = csv.reader(f)
-            llm_data = list(reader)
+    return res
 
-        for i, llm_output in enumerate(llm_data):
-            if i >= len(correct_data):
-                break
-            correct_categories = parse_connections_output(",".join(correct_data[i]))
-            llm_categories = parse_connections_output(",".join(llm_output))
 
-            if compare_categories(llm_categories, correct_categories):
-                results[model_name]["correct"] += 1
-            results[model_name]["total"] += 1
+def count_identical_lines(a, b):
+    return sum(
+        int(
+            all(
+                a_group == b_group
+                for a_group, b_group in zip(sorted(a_line), sorted(b_line))
+            )
+        )
+        for a_line, b_line in zip(parse_csv(a), parse_csv(b))
+    )
 
-    return results
+
+def analyze_all_csvs():
+    correct_results_file = "_results.csv"
+    return {
+        f.removesuffix(".csv"): count_identical_lines(f, correct_results_file)
+        for f in os.listdir(".")
+        if f.endswith(".csv") and f not in ("_results.csv", "_inputs.csv")
+    }
 
 
 def plot_results(results):
-    """Plots the results in a bar chart."""
-    model_names = list(results.keys())
-    success_rates = [
-        results[model]["correct"] / results[model]["total"] for model in model_names
-    ]
+    """Plots the results in a horizontal bar chart and saves to file."""
+    model_names = sorted(results.keys(), reverse=True)
+    success_counts = [results[model] for model in model_names]
 
-    plt.bar(model_names, success_rates)
-    plt.xlabel("Models")
-    plt.ylabel("Success Rate")
+    plt.figure(figsize=(10, 6))
+    plt.barh(model_names, success_counts)
+
+    plt.axvline(x=10, color="gray", linestyle=":", alpha=0.7)
+
+    plt.ylabel("Models")
+    plt.xlabel("Correct Answers (out of 10)")
     plt.title("Connections Puzzle Performance")
-    plt.ylim(0, 1)
-    plt.show()
+    plt.xlim(0, 11)
+    plt.xticks(range(0, 11))
+
+    plt.savefig("plot.png", bbox_inches="tight", dpi=300)
+    plt.close()
 
 
-# Usage
-model_files = [
-    f
-    for f in os.listdir(".")
-    if f.endswith(".csv") and f not in ("_results.csv", "_inputs.csv")
-]
-correct_results_file = "_results.csv"
-analysis_results = analyze_results(model_files, correct_results_file)
-plot_results(analysis_results)
+plot_results(analyze_all_csvs())
