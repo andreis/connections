@@ -78,7 +78,11 @@ def plot_results(results):
 
 
 # Usage
-model_files = [f for f in os.listdir(".") if f.endswith(".csv") and f != "_results.csv"]
+model_files = [
+    f
+    for f in os.listdir(".")
+    if f.endswith(".csv") and f not in ("_results.csv", "_inputs.csv")
+]
 correct_results_file = "_results.csv"
 analysis_results = analyze_results(model_files, correct_results_file)
 plot_results(analysis_results)
